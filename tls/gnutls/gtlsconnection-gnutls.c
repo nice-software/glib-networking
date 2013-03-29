@@ -26,6 +26,7 @@
 #include <errno.h>
 #include <stdarg.h>
 #include <gnutls/gnutls.h>
+#include <gnutls/dtls.h>
 #include <gnutls/x509.h>
 
 #include "gtlsconnection-gnutls.h"
@@ -326,6 +327,10 @@ g_tls_connection_gnutls_initable_init (GInitable     *initable,
   gnutls_transport_set_pull_timeout_function (gnutls->priv->session,
                                               g_tls_connection_gnutls_pull_timeout_func);
   gnutls_transport_set_ptr (gnutls->priv->session, gnutls);
+
+  /* Don't enforce MTU */
+  if (flags & GNUTLS_DATAGRAM)
+    gnutls_dtls_set_mtu (gnutls->priv->session, 65535);
 
   gnutls->priv->tls_istream = g_tls_input_stream_gnutls_new (gnutls);
   gnutls->priv->tls_ostream = g_tls_output_stream_gnutls_new (gnutls);
@@ -1089,6 +1094,8 @@ set_gnutls_error (GTlsConnectionGnutls *gnutls,
     gnutls_transport_set_errno (gnutls->priv->session, EINTR);
   else if (g_error_matches (error, G_IO_ERROR, G_IO_ERROR_TIMED_OUT))
     gnutls_transport_set_errno (gnutls->priv->session, EINTR);
+  else if (g_error_matches (error, G_IO_ERROR, G_IO_ERROR_MESSAGE_TOO_LARGE))
+    gnutls_transport_set_errno (gnutls->priv->session, EMSGSIZE);
   else
     gnutls_transport_set_errno (gnutls->priv->session, EIO);
 }
@@ -1636,10 +1643,22 @@ g_tls_connection_gnutls_write (GTlsConnectionGnutls  *gnutls,
 		 blocking, cancellable, error))
     return -1;
 
+  if (gnutls_dtls_get_data_mtu (gnutls->priv->session) < count)
+    {
+      ret = GNUTLS_E_LARGE_PACKET;
+      g_set_error (error, G_IO_ERROR, G_IO_ERROR_MESSAGE_TOO_LARGE,
+                   _("Message of size %lu bytes is too large for "
+                     "DTLS connection, maximum is %u bytes"),
+                   count,
+                   (guint) gnutls_dtls_get_data_mtu (gnutls->priv->session));
+      goto done;
+    }
+
   BEGIN_GNUTLS_IO (gnutls, G_IO_OUT, blocking, cancellable);
   ret = gnutls_record_send (gnutls->priv->session, buffer, count);
   END_GNUTLS_IO (gnutls, G_IO_OUT, ret, _("Error writing data to TLS socket: %s"), error);
 
+ done:
   yield_op (gnutls, G_TLS_CONNECTION_GNUTLS_OP_WRITE);
 
   if (ret >= 0)

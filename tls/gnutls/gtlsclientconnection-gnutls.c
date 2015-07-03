@@ -38,13 +38,14 @@ enum
   PROP_0,
   PROP_VALIDATION_FLAGS,
   PROP_SERVER_IDENTITY,
-  PROP_USE_SSL3,
+  PROP_ENABLE_NEGOTIATION,
   PROP_ACCEPTED_CAS
 };
 
 static void     g_tls_client_connection_gnutls_initable_interface_init (GInitableIface  *iface);
 
 static void g_tls_client_connection_gnutls_client_connection_interface_init (GTlsClientConnectionInterface *iface);
+static void g_tls_client_connection_gnutls_dtls_client_connection_interface_init (GDtlsClientConnectionInterface *iface);
 
 static int g_tls_client_connection_gnutls_retrieve_function (gnutls_session_t             session,
 							     const gnutls_datum_t        *req_ca_rdn,
@@ -59,13 +60,15 @@ G_DEFINE_TYPE_WITH_CODE (GTlsClientConnectionGnutls, g_tls_client_connection_gnu
 			 G_IMPLEMENT_INTERFACE (G_TYPE_INITABLE,
 						g_tls_client_connection_gnutls_initable_interface_init)
 			 G_IMPLEMENT_INTERFACE (G_TYPE_TLS_CLIENT_CONNECTION,
-						g_tls_client_connection_gnutls_client_connection_interface_init));
+						g_tls_client_connection_gnutls_client_connection_interface_init);
+                         G_IMPLEMENT_INTERFACE (G_TYPE_DTLS_CLIENT_CONNECTION,
+                                                g_tls_client_connection_gnutls_dtls_client_connection_interface_init));
 
 struct _GTlsClientConnectionGnutlsPrivate
 {
   GTlsCertificateFlags validation_flags;
   GSocketConnectable *server_identity;
-  gboolean use_ssl3;
+  gboolean enable_negotiation;
   gboolean session_data_override;
 
   GBytes *session_id;
@@ -138,7 +141,7 @@ g_tls_client_connection_gnutls_constructed (GObject *object)
 	}
       g_object_unref (remote_addr);
     }
-  g_object_unref (base_conn);
+  g_clear_object (&base_conn);
 
   if (G_OBJECT_CLASS (g_tls_client_connection_gnutls_parent_class)->constructed)
     G_OBJECT_CLASS (g_tls_client_connection_gnutls_parent_class)->constructed (object);
@@ -200,8 +203,8 @@ g_tls_client_connection_gnutls_get_property (GObject    *object,
       g_value_set_object (value, gnutls->priv->server_identity);
       break;
 
-    case PROP_USE_SSL3:
-      g_value_set_boolean (value, gnutls->priv->use_ssl3);
+    case PROP_ENABLE_NEGOTIATION:
+      g_value_set_boolean (value, gnutls->priv->enable_negotiation);
       break;
 
     case PROP_ACCEPTED_CAS:
@@ -256,8 +259,8 @@ g_tls_client_connection_gnutls_set_property (GObject      *object,
 	}
       break;
 
-    case PROP_USE_SSL3:
-      gnutls->priv->use_ssl3 = g_value_get_boolean (value);
+    case PROP_ENABLE_NEGOTIATION:
+      gnutls->priv->enable_negotiation = g_value_get_boolean (value);
       break;
 
     default:
@@ -394,9 +397,10 @@ g_tls_client_connection_gnutls_finish_handshake (GTlsConnectionGnutls  *conn,
                                                                    (GDestroyNotify)gnutls_free,
                                                                    session_datum.data);
 
-          g_tls_backend_gnutls_store_session (GNUTLS_CLIENT,
-                                              gnutls->priv->session_id,
-                                              gnutls->priv->session_data);
+          if (gnutls->priv->session_id)
+            g_tls_backend_gnutls_store_session (GNUTLS_CLIENT,
+                                                gnutls->priv->session_id,
+                                                gnutls->priv->session_data);
         }
     }
 }
@@ -421,6 +425,14 @@ g_tls_client_connection_gnutls_copy_session_state (GTlsClientConnection *conn,
 }
 
 static void
+g_tls_client_connection_gnutls_dtls_copy_session_state (GDtlsClientConnection *conn,
+                                                        GDtlsClientConnection *source)
+{
+  g_tls_client_connection_gnutls_copy_session_state (G_TLS_CLIENT_CONNECTION (conn),
+                                                     G_TLS_CLIENT_CONNECTION (source));
+}
+
+static void
 g_tls_client_connection_gnutls_class_init (GTlsClientConnectionGnutlsClass *klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
@@ -439,7 +451,8 @@ g_tls_client_connection_gnutls_class_init (GTlsClientConnectionGnutlsClass *klas
 
   g_object_class_override_property (gobject_class, PROP_VALIDATION_FLAGS, "validation-flags");
   g_object_class_override_property (gobject_class, PROP_SERVER_IDENTITY, "server-identity");
-  g_object_class_override_property (gobject_class, PROP_USE_SSL3, "use-ssl3");
+  g_object_class_override_property (gobject_class, PROP_ENABLE_NEGOTIATION, "enable-negotiation");
+  g_object_class_override_property (gobject_class, PROP_ENABLE_NEGOTIATION, "use-ssl3");
   g_object_class_override_property (gobject_class, PROP_ACCEPTED_CAS, "accepted-cas");
 }
 
@@ -455,4 +468,10 @@ g_tls_client_connection_gnutls_initable_interface_init (GInitableIface  *iface)
   g_tls_client_connection_gnutls_parent_initable_iface = g_type_interface_peek_parent (iface);
 
   iface->init = g_tls_client_connection_gnutls_initable_init;
+}
+
+static void
+g_tls_client_connection_gnutls_dtls_client_connection_interface_init (GDtlsClientConnectionInterface *iface)
+{
+  iface->copy_session_state = g_tls_client_connection_gnutls_dtls_copy_session_state;
 }

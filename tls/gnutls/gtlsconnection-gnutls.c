@@ -49,6 +49,10 @@ static ssize_t g_tls_connection_gnutls_pull_func (gnutls_transport_ptr_t  transp
 						  void                   *buf,
 						  size_t                  buflen);
 
+static int     g_tls_connection_gnutls_pull_timeout_func (gnutls_transport_ptr_t transport_data,
+                                                          unsigned int ms);
+
+
 static void     g_tls_connection_gnutls_initable_iface_init (GInitableIface  *iface);
 static gboolean g_tls_connection_gnutls_initable_init       (GInitable       *initable,
 							     GCancellable    *cancellable,
@@ -319,6 +323,8 @@ g_tls_connection_gnutls_initable_init (GInitable     *initable,
 				      g_tls_connection_gnutls_push_func);
   gnutls_transport_set_pull_function (gnutls->priv->session,
 				      g_tls_connection_gnutls_pull_func);
+  gnutls_transport_set_pull_timeout_function (gnutls->priv->session,
+                                              g_tls_connection_gnutls_pull_timeout_func);
   gnutls_transport_set_ptr (gnutls->priv->session, gnutls);
 
   gnutls->priv->tls_istream = g_tls_input_stream_gnutls_new (gnutls);
@@ -1139,6 +1145,51 @@ g_tls_connection_gnutls_push_func (gnutls_transport_ptr_t  transport_data,
     set_gnutls_error (gnutls, gnutls->priv->write_error);
 
   return ret;
+}
+
+static gboolean
+read_cb (GPollableInputStream *istream, gpointer user_data)
+{
+  gboolean *read_done = user_data;
+
+  g_assert (G_IS_POLLABLE_INPUT_STREAM (istream));
+
+  *read_done = TRUE;
+
+  return G_SOURCE_CONTINUE;
+}
+
+static int
+g_tls_connection_gnutls_pull_timeout_func (gnutls_transport_ptr_t transport_data,
+                                           unsigned int ms)
+{
+  GTlsConnectionGnutls *gnutls = transport_data;
+  GMainContext *ctx = g_main_context_new ();
+  GSource *read_source;
+  gboolean read_done = FALSE;
+
+  read_source = g_pollable_input_stream_create_source (G_POLLABLE_INPUT_STREAM (gnutls->priv->base_istream),
+                                                       gnutls->priv->read_cancellable);
+  g_source_set_ready_time (read_source, g_get_monotonic_time () + ms * 1000);
+  g_source_set_callback (read_source, (GSourceFunc) read_cb,
+                         &read_done, NULL);
+  g_source_attach (read_source, ctx);
+
+  while (!read_done)
+    g_main_context_iteration (ctx, TRUE);
+
+  g_source_destroy (read_source);
+
+  g_main_context_unref (ctx);
+  g_source_unref (read_source);
+
+  /* If @read_source was dispatched due to cancellation, the resulting error
+   * will be handled in g_tls_connection_gnutls_pull_func(). */
+  if (g_pollable_input_stream_is_readable (G_POLLABLE_INPUT_STREAM (gnutls->priv->base_istream)) ||
+      g_cancellable_is_cancelled (gnutls->priv->read_cancellable))
+    return 1;
+
+  return 0;
 }
 
 static GTlsCertificate *

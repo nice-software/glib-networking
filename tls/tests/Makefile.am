@@ -15,6 +15,7 @@ test_programs =       \
 	certificate   \
 	file-database \
 	connection    \
+	dtls-connection \
 	$(NULL)
 
 if HAVE_PKCS11
@@ -35,6 +36,9 @@ pkcs11_slot_SOURCES = pkcs11-slot.c \
 	mock-interaction.c mock-interaction.h
 
 connection_SOURCES = connection.c \
+	mock-interaction.c mock-interaction.h
+
+dtls_connection_SOURCES = dtls-connection.c \
 	mock-interaction.c mock-interaction.h
 
 endif

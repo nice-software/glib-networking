@@ -44,6 +44,7 @@ proxy/tests/libproxy
 /tls/tests/certificate
 /tls/tests/file-database
 /tls/tests/connection
+/tls/tests/dtls-connection
 /tls/tests/pkcs11
 /tls/tests/pkcs11-array
 /tls/tests/pkcs11-pin

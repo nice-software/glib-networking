@@ -388,14 +388,12 @@ yield_op (GTlsConnectionBase       *tls,
   g_mutex_unlock (&tls->op_mutex);
 }
 
-void
-g_tls_connection_base_push_io (GTlsConnectionBase *tls,
-			       GIOCondition        direction,
-			       gboolean            blocking,
-			       GCancellable       *cancellable)
+static void
+g_tls_connection_base_real_push_io (GTlsConnectionBase *tls,
+                                    GIOCondition        direction,
+                                    gboolean            blocking,
+                                    GCancellable       *cancellable)
 {
-  g_assert (direction & (G_IO_IN | G_IO_OUT));
-
   if (direction & G_IO_IN)
     {
       tls->read_blocking = blocking;
@@ -411,16 +409,26 @@ g_tls_connection_base_push_io (GTlsConnectionBase *tls,
     }
 }
 
-GTlsConnectionBaseStatus
-g_tls_connection_base_pop_io (GTlsConnectionBase  *tls,
-			      GIOCondition         direction,
-			      gboolean             success,
-			      GError             **error)
+void
+g_tls_connection_base_push_io (GTlsConnectionBase *tls,
+                               GIOCondition        direction,
+                               gboolean            blocking,
+                               GCancellable       *cancellable)
+{
+  g_assert (direction & (G_IO_IN | G_IO_OUT));
+  g_return_if_fail (G_IS_TLS_CONNECTION_BASE (tls));
+
+  G_TLS_CONNECTION_BASE_GET_CLASS (tls)->push_io (tls, direction,
+                                                  blocking, cancellable);
+}
+
+static GTlsConnectionBaseStatus
+g_tls_connection_base_real_pop_io (GTlsConnectionBase  *tls,
+                                   GIOCondition         direction,
+                                   gboolean             success,
+                                   GError             **error)
 {
   GError *my_error = NULL;
-
-  g_assert (direction & (G_IO_IN | G_IO_OUT));
-  g_assert (!error || !*error);
 
   if (direction & G_IO_IN)
     {
@@ -462,6 +470,20 @@ g_tls_connection_base_pop_io (GTlsConnectionBase  *tls,
     g_propagate_error (error, my_error);
 
   return G_TLS_CONNECTION_BASE_ERROR;
+}
+
+GTlsConnectionBaseStatus
+g_tls_connection_base_pop_io (GTlsConnectionBase  *tls,
+                              GIOCondition         direction,
+                              gboolean             success,
+                              GError             **error)
+{
+  g_assert (direction & (G_IO_IN | G_IO_OUT));
+  g_assert (!error || !*error);
+  g_return_val_if_fail (G_IS_TLS_CONNECTION_BASE (tls), G_TLS_CONNECTION_BASE_ERROR);
+
+  return G_TLS_CONNECTION_BASE_GET_CLASS (tls)->pop_io (tls, direction,
+                                                        success, error);
 }
 
 gboolean
@@ -1135,6 +1157,9 @@ g_tls_connection_base_class_init (GTlsConnectionBaseClass *klass)
   iostream_class->close_fn          = g_tls_connection_base_close;
   iostream_class->close_async       = g_tls_connection_base_close_async;
   iostream_class->close_finish      = g_tls_connection_base_close_finish;
+
+  klass->push_io = g_tls_connection_base_real_push_io;
+  klass->pop_io = g_tls_connection_base_real_pop_io;
 
   g_object_class_override_property (gobject_class, PROP_BASE_IO_STREAM, "base-io-stream");
   g_object_class_override_property (gobject_class, PROP_REQUIRE_CLOSE_NOTIFY, "require-close-notify");

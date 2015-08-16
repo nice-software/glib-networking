@@ -53,6 +53,15 @@ struct _GTlsConnectionBaseClass
   GTlsConnectionBaseStatus (*complete_handshake)   (GTlsConnectionBase  *tls,
 						    GError             **error);
 
+  void                     (*push_io)              (GTlsConnectionBase  *tls,
+                                                    GIOCondition         direction,
+                                                    gboolean             blocking,
+                                                    GCancellable        *cancellable);
+  GTlsConnectionBaseStatus (*pop_io)               (GTlsConnectionBase  *tls,
+                                                    GIOCondition         direction,
+                                                    gboolean             success,
+                                                    GError             **error);
+
   GTlsConnectionBaseStatus (*read_fn)              (GTlsConnectionBase  *tls,
 						    void                *buffer,
 						    gsize                count,

@@ -24,7 +24,9 @@
 
 #include "config.h"
 
+#ifdef WITH_BACKEND_GNUTLS
 #include "mock-interaction.h"
+#endif
 
 #include <gio/gio.h>
 #include <gnutls/gnutls.h>
@@ -1005,6 +1007,7 @@ test_client_auth_failure (TestConnection *test,
   g_assert (accepted_changed == TRUE);
 }
 
+#ifdef WITH_BACKEND_GNUTLS
 static void
 test_client_auth_request_cert (TestConnection *test,
                                gconstpointer   data)
@@ -1094,6 +1097,7 @@ test_client_auth_request_fail (TestConnection *test,
   g_io_stream_close (test->server_connection, NULL, NULL);
   g_io_stream_close (test->client_connection, NULL, NULL);
 }
+#endif
 
 static void
 test_connection_no_database (TestConnection *test,
@@ -1439,6 +1443,7 @@ test_simultaneous_async (TestConnection *test,
   g_assert_cmpstr (test->buf, ==, TEST_DATA);
 }
 
+#ifdef WITH_BACKEND_GNUTLS
 static gboolean
 check_gnutls_has_rehandshaking_bug (void)
 {
@@ -1451,16 +1456,19 @@ check_gnutls_has_rehandshaking_bug (void)
 	  !strcmp (version, "3.3.9") ||
           !strcmp (version, "3.3.10"));
 }
+#endif
 
 static void
 test_simultaneous_async_rehandshake (TestConnection *test,
 				     gconstpointer   data)
 {
+#ifdef WITH_BACKEND_GNUTLS
   if (check_gnutls_has_rehandshaking_bug ())
     {
       g_test_skip ("test would fail due to gnutls bug 108690");
       return;
     }
+#endif
 
   test->rehandshake = TRUE;
   test_simultaneous_async (test, data);
@@ -1556,11 +1564,13 @@ static void
 test_simultaneous_sync_rehandshake (TestConnection *test,
 				    gconstpointer   data)
 {
+#ifdef WITH_BACKEND_GNUTLS
   if (check_gnutls_has_rehandshaking_bug ())
     {
       g_test_skip ("test would fail due to gnutls bug 108690");
       return;
     }
+#endif
 
   test->rehandshake = TRUE;
   test_simultaneous_sync (test, data);
@@ -1882,8 +1892,9 @@ main (int   argc,
   g_test_bug_base ("http://bugzilla.gnome.org/");
 
   g_setenv ("GSETTINGS_BACKEND", "memory", TRUE);
-  g_setenv ("GIO_EXTRA_MODULES", TOP_BUILDDIR "/tls/gnutls/.libs", TRUE);
-  g_setenv ("GIO_USE_TLS", "gnutls", TRUE);
+  g_setenv ("GIO_EXTRA_MODULES", TOP_BUILDDIR "/tls/" BACKEND "/.libs", TRUE);
+  g_setenv ("GIO_USE_TLS", BACKEND, TRUE);
+  g_assert (g_ascii_strcasecmp (G_OBJECT_TYPE_NAME (g_tls_backend_get_default ()), "GTlsBackend" BACKEND) == 0);
 
   g_test_add ("/tls/connection/basic", TestConnection, NULL,
               setup_connection, test_basic_connection, teardown_connection);
@@ -1907,10 +1918,12 @@ main (int   argc,
               setup_connection, test_client_auth_rehandshake, teardown_connection);
   g_test_add ("/tls/connection/client-auth-failure", TestConnection, NULL,
               setup_connection, test_client_auth_failure, teardown_connection);
+#ifdef WITH_BACKEND_GNUTLS
   g_test_add ("/tls/connection/client-auth-request-cert", TestConnection, NULL,
               setup_connection, test_client_auth_request_cert, teardown_connection);
   g_test_add ("/tls/connection/client-auth-request-fail", TestConnection, NULL,
               setup_connection, test_client_auth_request_fail, teardown_connection);
+#endif
   g_test_add ("/tls/connection/no-database", TestConnection, NULL,
               setup_connection, test_connection_no_database, teardown_connection);
   g_test_add ("/tls/connection/failed", TestConnection, NULL,

@@ -676,6 +676,32 @@ g_tls_connection_base_create_source (GTlsConnectionBase  *tls,
   return source;
 }
 
+gboolean
+g_tls_connection_base_accept_peer_certificate (GTlsConnectionBase   *tls,
+                                               GTlsCertificate      *peer_certificate,
+                                               GTlsCertificateFlags  peer_certificate_errors)
+{
+  gboolean accepted = FALSE;
+
+  if (G_IS_TLS_CLIENT_CONNECTION (tls))
+    {
+      GTlsCertificateFlags validation_flags =
+        g_tls_client_connection_get_validation_flags (G_TLS_CLIENT_CONNECTION (tls));
+
+      if ((peer_certificate_errors & validation_flags) == 0)
+        accepted = TRUE;
+    }
+
+  if (!accepted)
+    {
+      accepted = g_tls_connection_emit_accept_certificate (G_TLS_CONNECTION (tls),
+                                                           peer_certificate,
+                                                           peer_certificate_errors);
+    }
+
+  return accepted;
+}
+
 void
 g_tls_connection_base_set_peer_certificate (GTlsConnectionBase   *tls,
 					    GTlsCertificate      *peer_certificate,

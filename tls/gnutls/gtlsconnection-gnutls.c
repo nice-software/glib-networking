@@ -615,32 +615,6 @@ g_tls_connection_gnutls_handshake (GTlsConnectionBase  *tls,
   return status;
 }
 
-static gboolean
-accept_peer_certificate (GTlsConnectionGnutls *gnutls,
-			 GTlsCertificate      *peer_certificate,
-			 GTlsCertificateFlags  peer_certificate_errors)
-{
-  gboolean accepted = FALSE;
-
-  if (G_IS_TLS_CLIENT_CONNECTION (gnutls))
-    {
-      GTlsCertificateFlags validation_flags =
-	g_tls_client_connection_get_validation_flags (G_TLS_CLIENT_CONNECTION (gnutls));
-
-      if ((peer_certificate_errors & validation_flags) == 0)
-	accepted = TRUE;
-    }
-
-  if (!accepted)
-    {
-      accepted = g_tls_connection_emit_accept_certificate (G_TLS_CONNECTION (gnutls),
-							   peer_certificate,
-							   peer_certificate_errors);
-    }
-
-  return accepted;
-}
-
 static GTlsConnectionBaseStatus
 g_tls_connection_gnutls_complete_handshake (GTlsConnectionBase  *tls,
 					    GError             **error)
@@ -656,8 +630,8 @@ g_tls_connection_gnutls_complete_handshake (GTlsConnectionBase  *tls,
 
   if (peer_certificate)
     {
-      if (!accept_peer_certificate (gnutls, peer_certificate,
-				    peer_certificate_errors))
+      if (!g_tls_connection_base_accept_peer_certificate (tls, peer_certificate,
+                                                          peer_certificate_errors))
 	{
 	  g_set_error_literal (error, G_TLS_ERROR, G_TLS_ERROR_BAD_CERTIFICATE,
 			       _("Unacceptable TLS certificate"));

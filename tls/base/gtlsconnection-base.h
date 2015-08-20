@@ -158,6 +158,10 @@ struct _GTlsConnectionBase
 
 GType g_tls_connection_base_get_type (void) G_GNUC_CONST;
 
+gboolean g_tls_connection_base_accept_peer_certificate (GTlsConnectionBase   *tls,
+                                                        GTlsCertificate      *peer_certificate,
+                                                        GTlsCertificateFlags  peer_certificate_errors);
+
 void g_tls_connection_base_set_peer_certificate (GTlsConnectionBase   *tls,
 						 GTlsCertificate      *peer_certificate,
 						 GTlsCertificateFlags  peer_certificate_errors);

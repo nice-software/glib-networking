@@ -25,6 +25,10 @@
 #include "config.h"
 #include "glib.h"
 
+#ifdef G_OS_WIN32
+#define WIN32_LEAN_AND_MEAN
+#endif
+
 #include <errno.h>
 #include <openssl/ssl.h>
 #include <openssl/err.h>

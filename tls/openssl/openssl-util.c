@@ -67,6 +67,10 @@
 #include <string.h>
 #include <openssl/x509v3.h>
 
+#ifdef _MSC_VER
+#define strncasecmp _strnicmp
+#endif
+
 typedef int (*equal_fn) (const unsigned char *pattern, size_t pattern_len,
                          const unsigned char *subject, size_t subject_len,
                          unsigned int flags);

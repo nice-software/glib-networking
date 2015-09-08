@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="Windows-1252"?>
+<VisualStudioPropertySheet
+	ProjectType="Visual C++"
+	Version="8.00"
+	Name="glibnetworkinginstallprops"
+	InheritedPropertySheets=".\glib-networking-build-defines.vsprops"
+	>
+	<UserMacro
+		Name="GlibNetworkingDoInstall"
+		Value="
+mkdir $(CopyDir)&#x0D;&#x0A;
+mkdir $(CopyDir)\lib\gio\modules&#x0D;&#x0A;
+copy $(SolutionDir)$(ConfigurationName)\$(PlatformName)\bin\libgiognomeproxy.dll $(CopyDir)\lib\gio\modules&#x0D;&#x0A;
+copy $(SolutionDir)$(ConfigurationName)\$(PlatformName)\bin\libgiognomeproxy.pdb $(CopyDir)\lib\gio\modules&#x0D;&#x0A;
+copy $(SolutionDir)$(ConfigurationName)\$(PlatformName)\bin\libgioopenssl.dll $(CopyDir)\lib\gio\modules&#x0D;&#x0A;
+copy $(SolutionDir)$(ConfigurationName)\$(PlatformName)\bin\libgioopenssl.pdb $(CopyDir)\lib\gio\modules&#x0D;&#x0A;
+
+$(CopyDir)\bin\gio-querymodules $(CopyDir)\lib\gio\modules&#x0D;&#x0A;
+"
+	/>
+</VisualStudioPropertySheet>

@@ -170,7 +170,7 @@ AS_IF([test "$with_openssl" != "no"],
       [PKG_CHECK_MODULES(OPENSSL, [openssl],
                          [with_openssl=yes
                           tls_support="openssl $tls_support"],
-                         [AS_IF([test "x$with_nss" = "xyes"],
+                         [AS_IF([test "x$with_openssl" = "xyes"],
                                 [AC_MSG_FAILURE("$OPENSSL_PKG_ERRORS")])])])
 AM_CONDITIONAL(HAVE_OPENSSL, [test "$with_openssl" = "yes"])
 AC_SUBST(OPENSSL_CFLAGS)

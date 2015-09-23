@@ -224,6 +224,7 @@ g_tls_server_connection_openssl_initable_init (GInitable       *initable,
   GTlsServerConnectionOpenssl *server = G_TLS_SERVER_CONNECTION_OPENSSL (initable);
   GTlsServerConnectionOpensslPrivate *priv;
   GTlsCertificate *cert;
+  long options;
 
   priv = g_tls_server_connection_openssl_get_instance_private (server);
 
@@ -238,11 +239,17 @@ g_tls_server_connection_openssl_initable_init (GInitable       *initable,
       return FALSE;
     }
 
+  options = SSL_OP_NO_TICKET |
+            SSL_OP_NO_SSLv2 |
+            SSL_OP_NO_SSLv3 |
+            SSL_OP_NO_TLSv1;
+
+#if OPENSSL_VERSION_NUMBER >= 0x10001000L
+  options |= SSL_OP_NO_TLSv1_1;
+#endif
+
   /* Only TLS 1.2 or higher */
-  SSL_CTX_set_options (priv->ssl_ctx,
-                       SSL_OP_NO_TICKET |
-                       SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3 |
-                       SSL_OP_NO_TLSv1 | SSL_OP_NO_TLSv1_1);
+  SSL_CTX_set_options (priv->ssl_ctx, options);
 
   cert = g_tls_connection_get_certificate (G_TLS_CONNECTION (initable));
   if (cert != NULL)

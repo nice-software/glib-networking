@@ -143,7 +143,9 @@ end_openssl_io (GTlsConnectionOpenssl  *openssl,
       return status;
     }
 
-  g_propagate_error (error, my_error);
+  if (my_error != NULL)
+    g_propagate_error (error, my_error);
+
   if (error && !*error)
     {
       va_list ap;

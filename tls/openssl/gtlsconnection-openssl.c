@@ -126,7 +126,8 @@ end_openssl_io (GTlsConnectionOpenssl  *openssl,
           reason == SSL_R_UNKNOWN_ALERT_TYPE ||
           reason == SSL_R_DECRYPTION_FAILED ||
           reason == SSL_R_BAD_PROTOCOL_VERSION_NUMBER ||
-          reason == SSL_R_SSLV3_ALERT_HANDSHAKE_FAILURE)
+          reason == SSL_R_SSLV3_ALERT_HANDSHAKE_FAILURE ||
+          reason == SSL_R_UNKNOWN_PROTOCOL)
         {
           g_clear_error (&my_error);
           g_set_error_literal (error, G_TLS_ERROR, G_TLS_ERROR_NOT_TLS,

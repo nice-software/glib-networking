@@ -311,6 +311,14 @@ g_tls_certificate_openssl_verify (GTlsCertificate     *cert,
 
       store = X509_STORE_new ();
 
+      if (!X509_STORE_CTX_init (&csc, store, x, untrusted))
+        {
+          sk_X509_free (untrusted);
+          X509_STORE_CTX_cleanup (&csc);
+          X509_STORE_free (store);
+          return G_TLS_CERTIFICATE_GENERIC_ERROR;
+        }
+
       trusted = sk_X509_new_null ();
       cert_openssl = G_TLS_CERTIFICATE_OPENSSL (trusted_ca);
       for (; cert_openssl; cert_openssl = priv->issuer)
@@ -319,17 +327,11 @@ g_tls_certificate_openssl_verify (GTlsCertificate     *cert,
           sk_X509_push (trusted, priv->cert);
         }
 
-      if (!X509_STORE_CTX_init (&csc, store, x, untrusted))
-        {
-          X509_STORE_CTX_cleanup (&csc);
-          X509_STORE_free (store);
-          return G_TLS_CERTIFICATE_GENERIC_ERROR;
-        }
-
       X509_STORE_CTX_trusted_stack (&csc, trusted);
       if (X509_verify_cert (&csc) <= 0)
         gtls_flags |= g_tls_certificate_openssl_convert_error (X509_STORE_CTX_get_error (&csc));
 
+      sk_X509_free (trusted);
       X509_STORE_CTX_cleanup (&csc);
       X509_STORE_free (store);
     }

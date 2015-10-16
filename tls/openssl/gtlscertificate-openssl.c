@@ -227,6 +227,7 @@ g_tls_certificate_openssl_set_property (GObject      *object,
       g_return_if_fail (priv->have_key == FALSE);
       bio = BIO_new_mem_buf ((gpointer)string, -1);
       priv->key = PEM_read_bio_PrivateKey (bio, NULL, NULL, NULL);
+      BIO_free (bio);
       if (priv->key != NULL)
         priv->have_key = TRUE;
       else if (!priv->construct_error)

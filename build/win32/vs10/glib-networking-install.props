@@ -13,7 +13,7 @@ copy $(SolutionDir)$(Configuration)\$(Platform)\bin\libgiognomeproxy.pdb $(CopyD
 copy $(SolutionDir)$(Configuration)\$(Platform)\bin\libgioopenssl.dll $(CopyDir)\lib\gio\modules
 copy $(SolutionDir)$(Configuration)\$(Platform)\bin\libgioopenssl.pdb $(CopyDir)\lib\gio\modules
 
-$(CopyDir)\bin\gio-querymodules $(CopyDir)\lib\gio\modules
+$(GlibEtcInstallRoot)\bin\gio-querymodules $(CopyDir)\lib\gio\modules
 </GlibNetworkingDoInstall>
   </PropertyGroup>
   <PropertyGroup>

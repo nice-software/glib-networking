@@ -15,7 +15,7 @@ copy $(SolutionDir)$(ConfigurationName)\$(PlatformName)\bin\libgiognomeproxy.pdb
 copy $(SolutionDir)$(ConfigurationName)\$(PlatformName)\bin\libgioopenssl.dll $(CopyDir)\lib\gio\modules&#x0D;&#x0A;
 copy $(SolutionDir)$(ConfigurationName)\$(PlatformName)\bin\libgioopenssl.pdb $(CopyDir)\lib\gio\modules&#x0D;&#x0A;
 
-$(CopyDir)\bin\gio-querymodules $(CopyDir)\lib\gio\modules&#x0D;&#x0A;
+$(GlibEtcInstallRoot)\bin\gio-querymodules $(CopyDir)\lib\gio\modules&#x0D;&#x0A;
 "
 	/>
 </VisualStudioPropertySheet>

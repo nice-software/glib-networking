@@ -112,6 +112,9 @@ gtls_bio_write (BIO        *bio,
 {
   GTlsBio *gbio;
 
+  if (in == NULL || inl == 0)
+    return 0;
+
   gbio = (GTlsBio *)bio->ptr;
 
   return g_pollable_stream_write (g_io_stream_get_output_stream (gbio->io_stream),
@@ -127,6 +130,9 @@ gtls_bio_read (BIO  *bio,
                int   outl)
 {
   GTlsBio *gbio;
+
+  if (out == NULL || outl == 0)
+    return 0;
 
   gbio = (GTlsBio *)bio->ptr;
 

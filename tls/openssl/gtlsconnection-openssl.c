@@ -540,3 +540,26 @@ g_tls_connection_openssl_get_ssl_ctx (GTlsConnectionOpenssl *openssl)
 
   return G_TLS_CONNECTION_OPENSSL_GET_CLASS (openssl)->get_ssl_ctx (openssl);
 }
+
+gboolean
+g_tls_connection_openssl_request_certificate (GTlsConnectionOpenssl  *openssl,
+                                              GError                **error)
+{
+  GTlsInteractionResult res = G_TLS_INTERACTION_UNHANDLED;
+  GTlsInteraction *interaction;
+  GTlsConnection *conn;
+  GTlsConnectionBase *tls;
+
+  g_return_val_if_fail (G_IS_TLS_CONNECTION_OPENSSL (openssl), FALSE);
+
+  conn = G_TLS_CONNECTION (openssl);
+  tls = G_TLS_CONNECTION_BASE (openssl);
+
+  interaction = g_tls_connection_get_interaction (conn);
+  if (!interaction)
+    return FALSE;
+
+  res = g_tls_interaction_invoke_request_certificate (interaction, conn, 0,
+						      tls->read_cancellable, error);
+  return res != G_TLS_INTERACTION_FAILED;
+}

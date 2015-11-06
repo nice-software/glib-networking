@@ -346,10 +346,13 @@ retrieve_certificate (SSL       *ssl,
   GTlsClientConnectionOpenssl *client;
   GTlsClientConnectionOpensslPrivate *priv;
   GTlsConnectionBase *tls;
+  GTlsConnectionOpenssl *openssl;
   GTlsCertificate *cert;
+  gboolean set_certificate = FALSE;
 
   client = SSL_get_ex_data (ssl, data_index);
   tls = G_TLS_CONNECTION_BASE (client);
+  openssl = G_TLS_CONNECTION_OPENSSL (client);
 
   priv = g_tls_client_connection_openssl_get_instance_private (client);
 
@@ -360,6 +363,18 @@ retrieve_certificate (SSL       *ssl,
 
   cert = g_tls_connection_get_certificate (G_TLS_CONNECTION (client));
   if (cert != NULL)
+    set_certificate = TRUE;
+  else
+    {
+      g_clear_error (&tls->certificate_error);
+      if (g_tls_connection_openssl_request_certificate (openssl, &tls->certificate_error))
+        {
+          cert = g_tls_connection_get_certificate (G_TLS_CONNECTION (client));
+          set_certificate = (cert != NULL);
+        }
+    }
+
+  if (set_certificate)
     {
       EVP_PKEY *key;
 

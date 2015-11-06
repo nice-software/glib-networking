@@ -622,6 +622,7 @@ g_tls_connection_gnutls_complete_handshake (GTlsConnectionBase  *tls,
   GTlsConnectionGnutls *gnutls = G_TLS_CONNECTION_GNUTLS (tls);
   GTlsCertificate *peer_certificate;
   GTlsCertificateFlags peer_certificate_errors = 0;
+  gboolean status = G_TLS_CONNECTION_BASE_OK;
 
   peer_certificate = gnutls->priv->peer_certificate_tmp;
   gnutls->priv->peer_certificate_tmp = NULL;
@@ -635,7 +636,7 @@ g_tls_connection_gnutls_complete_handshake (GTlsConnectionBase  *tls,
 	{
 	  g_set_error_literal (error, G_TLS_ERROR, G_TLS_ERROR_BAD_CERTIFICATE,
 			       _("Unacceptable TLS certificate"));
-	  return G_TLS_CONNECTION_BASE_ERROR;
+	  status = G_TLS_CONNECTION_BASE_ERROR;
 	}
 
       g_tls_connection_base_set_peer_certificate (G_TLS_CONNECTION_BASE (gnutls),
@@ -643,7 +644,7 @@ g_tls_connection_gnutls_complete_handshake (GTlsConnectionBase  *tls,
 						  peer_certificate_errors);
     }
 
-  return G_TLS_CONNECTION_BASE_OK;
+  return status;
 }
 
 static GTlsConnectionBaseStatus

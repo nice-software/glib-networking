@@ -47,7 +47,7 @@ certificate_openssl_SOURCES = certificate.c
 certificate_openssl_CPPFLAGS = $(AM_CPPFLAGS) $(OPENSSL_CFLAGS) -DBACKEND=\""openssl"\" -DWITH_BACKEND_OPENSSL
 certificate_openssl_LDADD = $(GLIB_LIBS) $(OPENSSL_LIBS)
 
-connection_openssl_SOURCES = connection.c
+connection_openssl_SOURCES = connection.c mock-interaction.c mock-interaction.h
 connection_openssl_CPPFLAGS = $(AM_CPPFLAGS) $(OPENSSL_CFLAGS) -DBACKEND=\""openssl"\" -DWITH_BACKEND_OPENSSL
 connection_openssl_LDADD = $(GLIB_LIBS) $(OPENSSL_LIBS)
 

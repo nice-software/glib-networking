@@ -24,9 +24,7 @@
 
 #include "config.h"
 
-#ifdef WITH_BACKEND_GNUTLS
 #include "mock-interaction.h"
-#endif
 
 #include <gio/gio.h>
 
@@ -1010,7 +1008,6 @@ test_client_auth_failure (TestConnection *test,
   g_assert (accepted_changed == TRUE);
 }
 
-#ifdef WITH_BACKEND_GNUTLS
 static void
 test_client_auth_request_cert (TestConnection *test,
                                gconstpointer   data)
@@ -1100,7 +1097,6 @@ test_client_auth_request_fail (TestConnection *test,
   g_io_stream_close (test->server_connection, NULL, NULL);
   g_io_stream_close (test->client_connection, NULL, NULL);
 }
-#endif
 
 static void
 test_connection_no_database (TestConnection *test,
@@ -1931,12 +1927,10 @@ main (int   argc,
               setup_connection, test_client_auth_rehandshake, teardown_connection);
   g_test_add ("/tls/connection/client-auth-failure", TestConnection, NULL,
               setup_connection, test_client_auth_failure, teardown_connection);
-#ifdef WITH_BACKEND_GNUTLS
   g_test_add ("/tls/connection/client-auth-request-cert", TestConnection, NULL,
               setup_connection, test_client_auth_request_cert, teardown_connection);
   g_test_add ("/tls/connection/client-auth-request-fail", TestConnection, NULL,
               setup_connection, test_client_auth_request_fail, teardown_connection);
-#endif
   g_test_add ("/tls/connection/no-database", TestConnection, NULL,
               setup_connection, test_connection_no_database, teardown_connection);
   g_test_add ("/tls/connection/failed", TestConnection, NULL,

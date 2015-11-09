@@ -68,6 +68,7 @@ g_tls_server_connection_openssl_finalize (GObject *object)
 
   SSL_free (priv->ssl);
   SSL_CTX_free (priv->ssl_ctx);
+  SSL_SESSION_free (priv->session);
 
   G_OBJECT_CLASS (g_tls_server_connection_openssl_parent_class)->finalize (object);
 }

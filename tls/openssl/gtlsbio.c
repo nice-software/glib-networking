@@ -112,7 +112,7 @@ gtls_bio_write (BIO        *bio,
 {
   GTlsBio *gbio;
 
-  if (in == NULL || inl == 0)
+  if (bio->init == 0 || in == NULL || inl == 0)
     return 0;
 
   gbio = (GTlsBio *)bio->ptr;
@@ -131,7 +131,7 @@ gtls_bio_read (BIO  *bio,
 {
   GTlsBio *gbio;
 
-  if (out == NULL || outl == 0)
+  if (bio->init == 0 || out == NULL || outl == 0)
     return 0;
 
   gbio = (GTlsBio *)bio->ptr;

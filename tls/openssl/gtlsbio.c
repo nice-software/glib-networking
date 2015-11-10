@@ -96,6 +96,10 @@ gtls_bio_ctrl (BIO  *b,
     case BIO_CTRL_FLUSH:
       ret = 1;
       break;
+    case BIO_CTRL_PUSH:
+    case BIO_CTRL_POP:
+      ret = 0;
+      break;
     default:
       g_debug ("Got unsupported command: %d", cmd);
       ret = 0;

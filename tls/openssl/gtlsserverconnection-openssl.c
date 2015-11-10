@@ -122,16 +122,7 @@ static int
 verify_callback (int             preverify_ok,
                  X509_STORE_CTX *ctx)
 {
-  int err;
-
-  err = X509_STORE_CTX_get_error (ctx);
-
-  if (err == X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY ||
-      err == X509_V_ERR_CERT_UNTRUSTED ||
-      err == X509_V_ERR_UNABLE_TO_VERIFY_LEAF_SIGNATURE)
-    return 1;
-
-  return preverify_ok;
+  return 1;
 }
 
 static GTlsConnectionBaseStatus

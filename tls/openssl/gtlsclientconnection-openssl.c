@@ -46,14 +46,9 @@ typedef struct _GTlsClientConnectionOpensslPrivate
   GTlsCertificateFlags validation_flags;
   GSocketConnectable *server_identity;
   gboolean use_ssl3;
-  gboolean session_data_override;
-
-  GBytes *session_id;
-  GBytes *session_data;
 
   STACK_OF (X509_NAME) *ca_list;
 
-  SSL_SESSION *session;
   SSL *ssl;
   SSL_CTX *ssl_ctx;
 } GTlsClientConnectionOpensslPrivate;
@@ -89,8 +84,6 @@ g_tls_client_connection_openssl_finalize (GObject *object)
   priv = g_tls_client_connection_openssl_get_instance_private (openssl);
 
   g_clear_object (&priv->server_identity);
-  g_clear_pointer (&priv->session_id, g_bytes_unref);
-  g_clear_pointer (&priv->session_data, g_bytes_unref);
 
   SSL_free (priv->ssl);
   SSL_CTX_free (priv->ssl_ctx);
@@ -204,53 +197,6 @@ g_tls_client_connection_openssl_set_property (GObject      *object,
     }
 }
 
-static void
-g_tls_client_connection_openssl_constructed (GObject *object)
-{
-  GTlsClientConnectionOpenssl *openssl = G_TLS_CLIENT_CONNECTION_OPENSSL (object);
-  GTlsClientConnectionOpensslPrivate *priv;
-  GSocketConnection *base_conn;
-  GSocketAddress *remote_addr;
-  GInetAddress *iaddr;
-  guint port;
-
-  priv = g_tls_client_connection_openssl_get_instance_private (openssl);
-
-  /* Create a TLS session ID. We base it on the IP address since
-   * different hosts serving the same hostname/service will probably
-   * not share the same session cache. We base it on the
-   * server-identity because at least some servers will fail (rather
-   * than just failing to resume the session) if we don't.
-   * (https://bugs.launchpad.net/bugs/823325)
-   */
-  g_object_get (G_OBJECT (openssl), "base-io-stream", &base_conn, NULL);
-  if (G_IS_SOCKET_CONNECTION (base_conn))
-    {
-      remote_addr = g_socket_connection_get_remote_address (base_conn, NULL);
-      if (G_IS_INET_SOCKET_ADDRESS (remote_addr))
-        {
-          GInetSocketAddress *isaddr = G_INET_SOCKET_ADDRESS (remote_addr);
-          const gchar *server_hostname;
-          gchar *addrstr, *session_id;
-
-          iaddr = g_inet_socket_address_get_address (isaddr);
-          port = g_inet_socket_address_get_port (isaddr);
-
-          addrstr = g_inet_address_to_string (iaddr);
-          server_hostname = get_server_identity (openssl);
-          session_id = g_strdup_printf ("%s/%s/%d", addrstr,
-                                        server_hostname ? server_hostname : "",
-                                        port);
-          priv->session_id = g_bytes_new_take (session_id, strlen (session_id));
-          g_free (addrstr);
-        }
-      g_object_unref (remote_addr);
-    }
-  g_object_unref (base_conn);
-
-  G_OBJECT_CLASS (g_tls_client_connection_openssl_parent_class)->constructed (object);
-}
-
 static GTlsConnectionBaseStatus
 g_tls_client_connection_openssl_handshake (GTlsConnectionBase  *tls,
                                            GCancellable        *cancellable,
@@ -304,7 +250,6 @@ g_tls_client_connection_openssl_class_init (GTlsClientConnectionOpensslClass *kl
   gobject_class->finalize     = g_tls_client_connection_openssl_finalize;
   gobject_class->get_property = g_tls_client_connection_openssl_get_property;
   gobject_class->set_property = g_tls_client_connection_openssl_set_property;
-  gobject_class->constructed  = g_tls_client_connection_openssl_constructed;
 
   base_class->handshake          = g_tls_client_connection_openssl_handshake;
   base_class->complete_handshake = g_tls_client_connection_openssl_complete_handshake;
@@ -391,24 +336,6 @@ retrieve_certificate (SSL       *ssl,
   return 0;
 }
 
-static int
-generate_session_id (const SSL     *ssl,
-                     unsigned char *id,
-                     unsigned int  *id_len)
-{
-  GTlsClientConnectionOpenssl *client;
-  GTlsClientConnectionOpensslPrivate *priv;
-  int len;
-
-  client = SSL_get_ex_data (ssl, data_index);
-  priv = g_tls_client_connection_openssl_get_instance_private (client);
-
-  len = MIN (*id_len, g_bytes_get_size (priv->session_id));
-  memcpy (id, g_bytes_get_data (priv->session_id, NULL), len);
-
-  return 1;
-}
-
 static gboolean
 g_tls_client_connection_openssl_initable_init (GInitable       *initable,
                                                GCancellable    *cancellable,
@@ -419,8 +346,6 @@ g_tls_client_connection_openssl_initable_init (GInitable       *initable,
   long options;
 
   priv = g_tls_client_connection_openssl_get_instance_private (client);
-
-  priv->session = SSL_SESSION_new ();
 
   priv->ssl_ctx = SSL_CTX_new (SSLv23_client_method ());
   if (priv->ssl_ctx == NULL)
@@ -452,9 +377,6 @@ g_tls_client_connection_openssl_initable_init (GInitable       *initable,
       }
   }
 #endif
-
-  SSL_CTX_set_generate_session_id (priv->ssl_ctx, generate_session_id);
-  SSL_CTX_add_session (priv->ssl_ctx, priv->session);
 
   SSL_CTX_set_client_cert_cb (priv->ssl_ctx, retrieve_certificate);
 

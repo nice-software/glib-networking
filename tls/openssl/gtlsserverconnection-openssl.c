@@ -34,7 +34,6 @@
 typedef struct _GTlsServerConnectionOpensslPrivate
 {
   GTlsAuthenticationMode authentication_mode;
-  SSL_SESSION *session;
   SSL *ssl;
   SSL_CTX *ssl_ctx;
 } GTlsServerConnectionOpensslPrivate;
@@ -68,7 +67,6 @@ g_tls_server_connection_openssl_finalize (GObject *object)
 
   SSL_free (priv->ssl);
   SSL_CTX_free (priv->ssl_ctx);
-  SSL_SESSION_free (priv->session);
 
   G_OBJECT_CLASS (g_tls_server_connection_openssl_parent_class)->finalize (object);
 }
@@ -220,8 +218,6 @@ g_tls_server_connection_openssl_initable_init (GInitable       *initable,
 
   priv = g_tls_server_connection_openssl_get_instance_private (server);
 
-  priv->session = SSL_SESSION_new ();
-
   priv->ssl_ctx = SSL_CTX_new (SSLv23_server_method ());
   if (priv->ssl_ctx == NULL)
     {
@@ -285,8 +281,6 @@ g_tls_server_connection_openssl_initable_init (GInitable       *initable,
                        ERR_error_string (ERR_get_error (), NULL));
         }
     }
-
-  SSL_CTX_add_session (priv->ssl_ctx, priv->session);
 
   SSL_CTX_set_cipher_list (priv->ssl_ctx, "HIGH:!DSS:!aNULL@STRENGTH");
 

@@ -109,7 +109,11 @@ end_openssl_io (GTlsConnectionOpenssl  *openssl,
   if ((err_code == SSL_ERROR_WANT_READ ||
        err_code == SSL_ERROR_WANT_WRITE) &&
       status != G_TLS_CONNECTION_BASE_WOULD_BLOCK)
-    return G_TLS_CONNECTION_BASE_TRY_AGAIN;
+    {
+      if (my_error)
+        g_error_free (my_error);
+      return G_TLS_CONNECTION_BASE_TRY_AGAIN;
+    }
 
   if (err_code == SSL_ERROR_ZERO_RETURN)
     return G_TLS_CONNECTION_BASE_OK;

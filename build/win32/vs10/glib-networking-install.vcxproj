@@ -76,16 +76,16 @@
   <ItemGroup>
     <CustomBuild Include="..\..\..\random_file">
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Copying Build Results...</Message>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(GlibNetworkingDoInstall)</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(GlibNetworkingDoInstall)$(GlibNetworkingPostInstall)</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\..\..\random_file_a;%(Outputs)</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Copying Build Results...</Message>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(GlibNetworkingDoInstall)</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(GlibNetworkingDoInstall)$(GlibNetworkingPostInstall)</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\..\..\random_file_a;%(Outputs)</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Copying Build Results...</Message>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(GlibNetworkingDoInstall)</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(GlibNetworkingDoInstall)$(GlibNetworkingPostInstall)</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\..\random_file_a;%(Outputs)</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Copying Build Results...</Message>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(GlibNetworkingDoInstall)</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(GlibNetworkingDoInstall)$(GlibNetworkingPostInstall)</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\..\..\random_file_a;%(Outputs)</Outputs>
     </CustomBuild>
   </ItemGroup>

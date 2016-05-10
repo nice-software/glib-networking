@@ -26,7 +26,7 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
-				CommandLine="$(GlibNetworkingDoInstall)"
+				CommandLine="$(GlibNetworkingDoInstall)$(GlibNetworkingPostInstall)"
 			/>
 		</Configuration>
 		<Configuration
@@ -37,7 +37,7 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
-				CommandLine="$(GlibNetworkingDoInstall)"
+				CommandLine="$(GlibNetworkingDoInstall)$(GlibNetworkingPostInstall)"
 			/>
 		</Configuration>
 		<Configuration
@@ -49,7 +49,7 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
-				CommandLine="$(GlibNetworkingDoInstall)"
+				CommandLine="$(GlibNetworkingDoInstall)$(GlibNetworkingPostInstall)"
 			/>
 		</Configuration>
 		<Configuration
@@ -61,7 +61,7 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
-				CommandLine="$(GlibNetworkingDoInstall)"
+				CommandLine="$(GlibNetworkingDoInstall)$(GlibNetworkingPostInstall)"
 			/>
 		</Configuration>
 	</Configurations>

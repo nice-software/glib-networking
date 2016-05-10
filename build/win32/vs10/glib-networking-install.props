@@ -12,9 +12,8 @@ copy $(SolutionDir)$(Configuration)\$(Platform)\bin\libgiognomeproxy.dll $(CopyD
 copy $(SolutionDir)$(Configuration)\$(Platform)\bin\libgiognomeproxy.pdb $(CopyDir)\bin\gio\modules
 copy $(SolutionDir)$(Configuration)\$(Platform)\bin\libgioopenssl.dll $(CopyDir)\bin\gio\modules
 copy $(SolutionDir)$(Configuration)\$(Platform)\bin\libgioopenssl.pdb $(CopyDir)\bin\gio\modules
-
-$(GlibEtcInstallRoot)\bin\gio-querymodules $(CopyDir)\bin\gio\modules
-</GlibNetworkingDoInstall>
+    </GlibNetworkingDoInstall>
+    <GlibNetworkingPostInstall>$(GlibEtcInstallRoot)\bin\gio-querymodules $(CopyDir)\bin\gio\modules</GlibNetworkingPostInstall>
   </PropertyGroup>
   <PropertyGroup>
     <_PropertySheetDisplayName>glibnetworkinginstallprops</_PropertySheetDisplayName>
@@ -23,6 +22,9 @@ $(GlibEtcInstallRoot)\bin\gio-querymodules $(CopyDir)\bin\gio\modules
   <ItemGroup>
     <BuildMacro Include="GlibNetworkingDoInstall">
       <Value>$(GlibNetworkingDoInstall)</Value>
+    </BuildMacro>
+    <BuildMacro Include="GlibNetworkingPostInstall">
+      <Value>$(GlibNetworkingPostInstall)</Value>
     </BuildMacro>
   </ItemGroup>
 </Project>

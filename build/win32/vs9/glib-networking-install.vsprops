@@ -14,8 +14,10 @@ copy $(SolutionDir)$(ConfigurationName)\$(PlatformName)\bin\libgiognomeproxy.dll
 copy $(SolutionDir)$(ConfigurationName)\$(PlatformName)\bin\libgiognomeproxy.pdb $(CopyDir)\bin\gio\modules&#x0D;&#x0A;
 copy $(SolutionDir)$(ConfigurationName)\$(PlatformName)\bin\libgioopenssl.dll $(CopyDir)\bin\gio\modules&#x0D;&#x0A;
 copy $(SolutionDir)$(ConfigurationName)\$(PlatformName)\bin\libgioopenssl.pdb $(CopyDir)\bin\gio\modules&#x0D;&#x0A;
-
-$(GlibEtcInstallRoot)\bin\gio-querymodules $(CopyDir)\bin\gio\modules&#x0D;&#x0A;
 "
+	/>
+	<UserMacro
+		Name="GlibNetworkingPostInstall"
+		Value="$(GlibEtcInstallRoot)\bin\gio-querymodules $(CopyDir)\bin\gio\modules"
 	/>
 </VisualStudioPropertySheet>
